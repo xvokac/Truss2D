@@ -138,12 +138,15 @@ class MainWindow(QMainWindow):
         text = "MEMBER FORCES:\n\n"
         for i, f in enumerate(member_forces):
             state = "Tension" if f > 0 else "Compression"
-            text += f"Member {i:3d}: {f:10.3f}  {state}\n"
+            n1, n2 = members[i]
+            text += f"Member {i:3d} (nodes {n1}-{n2}): {f:10.3f}  {state}\n"
 
         text += "\nREACTIONS:\n\n"
         for i, r in enumerate(reactions):
             if abs(r) > 1e-8:
-                text += f"DOF {i:3d}: {r:10.3f}\n"
+                node = i // 2
+                direction = "X" if i % 2 == 0 else "Y"
+                text += f"DOF {i:3d} (node {node}+{direction}): {r:10.3f}\n"
 
         self.results.setText(text)
 
@@ -153,3 +156,4 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     sys.exit(app.exec_())
+
