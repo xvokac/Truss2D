@@ -296,8 +296,7 @@ class Editor(QMainWindow):
                         for l in self.model.loads
                     ],
                 }
-            print(data)
-
+            
             with open(path, "w") as f:
                 json.dump(data, f, indent=2)
 ##            with open(f,"w") as fh:
@@ -356,3 +355,4 @@ if __name__ == "__main__":
     w = Editor()
     w.show()
     sys.exit(app.exec_())
+
