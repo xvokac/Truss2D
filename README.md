@@ -4,7 +4,7 @@ GUI solver of 2D truss structure
 
 ## Quick start
 
-Jestliže je instalován [git](https://git-scm.com/) a [Python](https://www.python.org/), potom:
+If [git](https://git-scm.com/) and [Python](https://www.python.org/) are installed, then:
 
 ```bash
 git clone https://github.com/xvokac/Truss2D
