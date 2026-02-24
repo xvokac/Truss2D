@@ -138,8 +138,10 @@ class TrussCanvas(Canvas):
         self.ax.set_xlim(*self.default_xlim)
         self.ax.set_ylim(*self.default_ylim)
         self.load_arrow_scale = self.default_load_arrow_scale
+        self.zoom_step = 0.15
 
         self.mpl_connect("button_press_event", self.click)
+        self.mpl_connect("scroll_event", self.on_scroll)
 
     def redraw(self, forces=None):
         xlim = self.ax.get_xlim()
@@ -199,6 +201,37 @@ class TrussCanvas(Canvas):
         self.load_arrow_scale = self.default_load_arrow_scale
         self.ax.set_xlim(*self.default_xlim)
         self.ax.set_ylim(*self.default_ylim)
+        self.redraw()
+
+    def on_scroll(self, e):
+        if e.inaxes != self.ax or e.xdata is None or e.ydata is None:
+            return
+
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
+        x_range = xlim[1] - xlim[0]
+        y_range = ylim[1] - ylim[0]
+
+        if e.button == "up":
+            factor = 1 - self.zoom_step
+        elif e.button == "down":
+            factor = 1 + self.zoom_step
+        else:
+            return
+
+        new_x_range = x_range * factor
+        new_y_range = y_range * factor
+
+        relx = (e.xdata - xlim[0]) / x_range if x_range else 0.5
+        rely = (e.ydata - ylim[0]) / y_range if y_range else 0.5
+
+        xmin = e.xdata - new_x_range * relx
+        xmax = e.xdata + new_x_range * (1 - relx)
+        ymin = e.ydata - new_y_range * rely
+        ymax = e.ydata + new_y_range * (1 - rely)
+
+        self.ax.set_xlim(xmin, xmax)
+        self.ax.set_ylim(ymin, ymax)
         self.redraw()
 
     # ---------- click logic ----------
