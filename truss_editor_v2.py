@@ -125,6 +125,8 @@ class TrussCanvas(Canvas):
                 col = "red" if forces[i] > 0 else "blue"
 
             self.ax.plot(x, y, color=col, lw=2)
+            mx, my = (x[0] + x[1]) / 2, (y[0] + y[1]) / 2
+            self.ax.text(mx, my, f"m{i}", color="darkgreen", fontsize=9)
 
         # nodes
         if m.nodes:
@@ -147,8 +149,11 @@ class TrussCanvas(Canvas):
         # loads
         for l in m.loads:
             x, y = m.nodes[l["node"]]
-            self.ax.arrow(x, y, l["fx"]*0.2, l["fy"]*0.2,
+            dx, dy = l["fx"] * 0.2, l["fy"] * 0.2
+            self.ax.arrow(x, y, dx, dy,
                           color="magenta", head_width=0.3)
+            self.ax.text(x + dx, y + dy, f"[{l["fx"]:.2f}, {l["fy"]:.2f}]",
+                         color="magenta", fontsize=9)
 
         self.ax.set_xlim(xlim)
         self.ax.set_ylim(ylim)
@@ -250,11 +255,11 @@ class Editor(QMainWindow):
         toolbar.addWidget(solve)
         solve.clicked.connect(self.solve)
 
-        save = QPushButton("Save")
+        save = QPushButton("Save file (JSON)")
         toolbar.addWidget(save)
         save.clicked.connect(self.save)
 
-        load = QPushButton("Load")
+        load = QPushButton("Load file (JSON)")
         toolbar.addWidget(load)
         load.clicked.connect(self.load)
 
