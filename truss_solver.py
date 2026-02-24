@@ -157,17 +157,16 @@ def solve_truss(filename):
     reactions = compute_reactions(K, u, F)
     member_forces = compute_member_forces(nodes, members, u)
 
-    return u, reactions, member_forces, members
+    return u, reactions, member_forces
 
 
 if __name__ == "__main__":
-    u, R, N, members = solve_truss("model.json")
+    u, R, N = solve_truss("model.json")
 
     print("\n=== Member forces ===")
     for i, n in enumerate(N):
         state = "Tension" if n > 0 else "Compression"
-        n1, n2 = members[i]
-        print(f"Member {i:3d} (nodes {n1}-{n2}): {n:12.4f}   {state}")
+        print(f"Member {i:3d}: {n:12.4f}   {state}")
 
 
     print("\n=== Reactions ===")
@@ -176,4 +175,5 @@ if __name__ == "__main__":
             node = i // 2
             direction = "X" if i % 2 == 0 else "Y"
             print(f"DOF {i:3d} (node {node}+{direction}): {r:12.4f}")
+
 
