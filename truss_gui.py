@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
 )
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
 
 from truss_solver import solve_truss
@@ -150,6 +151,8 @@ class MainWindow(QMainWindow):
         layout.addLayout(controls)
 
         self.canvas = TrussCanvas()
+        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
 
         layout.addWidget(QLabel("Results:"))
