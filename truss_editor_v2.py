@@ -152,7 +152,7 @@ class TrussCanvas(Canvas):
             dx, dy = l["fx"] * 0.2, l["fy"] * 0.2
             self.ax.arrow(x, y, dx, dy,
                           color="magenta", head_width=0.3)
-            self.ax.text(x + dx, y + dy, f"[{l["fx"]:.2f}, {l["fy"]:.2f}]",
+            self.ax.text(x + dx, y + dy, f"[{l['fx']:.2f}, {l['fy']:.2f}]",
                          color="magenta", fontsize=9)
 
         self.ax.set_xlim(xlim)
@@ -220,7 +220,35 @@ class TrussCanvas(Canvas):
             idx = ed.find_node(x, y)
             if idx is not None:
                 m.nodes.pop(idx)
-                m.members = [mbr for mbr in m.members if idx not in mbr]
+                # remove members connected to deleted node and reindex the rest
+                updated_members = []
+                for n1, n2 in m.members:
+                    if idx in (n1, n2):
+                        continue
+
+                    updated_members.append([
+                        n1 - 1 if n1 > idx else n1,
+                        n2 - 1 if n2 > idx else n2,
+                    ])
+                m.members = updated_members
+
+                # supports/loads must also be remapped to new node indices
+                updated_supports = []
+                for s in m.supports:
+                    if s["node"] == idx:
+                        continue
+                    s["node"] = s["node"] - 1 if s["node"] > idx else s["node"]
+                    updated_supports.append(s)
+                m.supports = updated_supports
+
+                updated_loads = []
+                for l in m.loads:
+                    if l["node"] == idx:
+                        continue
+                    l["node"] = l["node"] - 1 if l["node"] > idx else l["node"]
+                    updated_loads.append(l)
+                m.loads = updated_loads
+
                 self.redraw()
 
 
