@@ -76,6 +76,15 @@ class TrussCanvas(Canvas):
             load_endpoints.append((x + fx_vis, y + fy_vis))
             self.ax.arrow(x, y, fx_vis, fy_vis,
                           head_width=0.1, color="magenta")
+            self.ax.text(
+                x + fx_vis,
+                y + fy_vis,
+                f"[{fx:.2f}, {fy:.2f}]",
+                color="magenta",
+                fontsize=9,
+                ha="left",
+                va="bottom",
+            )
 
         if dynamic_view:
             min_x, max_x = np.min(nodes[:, 0]), np.max(nodes[:, 0])

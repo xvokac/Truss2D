@@ -82,6 +82,12 @@ def plot_truss(filename, scale_load=0.2):
                  length_includes_head=True,
                  color="magenta")
 
+        label_x = x + fx * scale_load
+        label_y = y + fy * scale_load
+        ax.text(label_x, label_y, f"[{fx:.2f}, {fy:.2f}]",
+                fontsize=9, color="magenta",
+                ha="left", va="bottom")
+
     # ======================
     # Formatting
     # ======================
