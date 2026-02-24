@@ -1,0 +1,22 @@
+{
+  "nodes": [
+    [0, 0],
+    [4, 0],
+    [2, 3]
+  ],
+
+  "members": [
+    [0, 1],
+    [1, 2],
+    [2, 0]
+  ],
+
+  "supports": [
+    {"node": 0, "fix": [true, true]},
+    {"node": 1, "fix": [false, true]}
+  ],
+
+  "loads": [
+    {"node": 2, "fx": 0, "fy": -10}
+  ]
+}
