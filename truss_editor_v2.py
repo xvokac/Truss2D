@@ -93,6 +93,35 @@ class LoadDialog(QDialog):
         btns.rejected.connect(self.reject)
 
 
+class ViewScaleDialog(QDialog):
+    def __init__(self, xlim, ylim, load_arrow_scale):
+        super().__init__()
+        self.setWindowTitle("View / Scale")
+
+        layout = QVBoxLayout(self)
+        self.xmin = QLineEdit(str(round(xlim[0], 3)))
+        self.xmax = QLineEdit(str(round(xlim[1], 3)))
+        self.ymin = QLineEdit(str(round(ylim[0], 3)))
+        self.ymax = QLineEdit(str(round(ylim[1], 3)))
+        self.load_scale = QLineEdit(str(round(load_arrow_scale, 3)))
+
+        layout.addWidget(QLabel("X min"))
+        layout.addWidget(self.xmin)
+        layout.addWidget(QLabel("X max"))
+        layout.addWidget(self.xmax)
+        layout.addWidget(QLabel("Y min"))
+        layout.addWidget(self.ymin)
+        layout.addWidget(QLabel("Y max"))
+        layout.addWidget(self.ymax)
+        layout.addWidget(QLabel("Load arrow scale (same for Fx and Fy)"))
+        layout.addWidget(self.load_scale)
+
+        btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        layout.addWidget(btns)
+        btns.accepted.connect(self.accept)
+        btns.rejected.connect(self.reject)
+
+
 # ================= CANVAS =================
 
 class TrussCanvas(Canvas):
@@ -102,8 +131,13 @@ class TrussCanvas(Canvas):
         self.ax = self.fig.add_subplot(111)
         self.editor = editor
 
-        self.ax.set_xlim(-20, 20)
-        self.ax.set_ylim(-20, 20)
+        self.default_xlim = (-20, 20)
+        self.default_ylim = (-20, 20)
+        self.default_load_arrow_scale = 0.2
+
+        self.ax.set_xlim(*self.default_xlim)
+        self.ax.set_ylim(*self.default_ylim)
+        self.load_arrow_scale = self.default_load_arrow_scale
 
         self.mpl_connect("button_press_event", self.click)
 
@@ -149,7 +183,7 @@ class TrussCanvas(Canvas):
         # loads
         for l in m.loads:
             x, y = m.nodes[l["node"]]
-            dx, dy = l["fx"] * 0.2, l["fy"] * 0.2
+            dx, dy = l["fx"] * self.load_arrow_scale, l["fy"] * self.load_arrow_scale
             self.ax.arrow(x, y, dx, dy,
                           color="magenta", head_width=0.3)
             self.ax.text(x + dx, y + dy, f"[{l['fx']:.2f}, {l['fy']:.2f}]",
@@ -160,6 +194,12 @@ class TrussCanvas(Canvas):
         self.ax.set_aspect("equal")
         self.ax.grid(True)
         self.draw()
+
+    def reset_view_scale(self):
+        self.load_arrow_scale = self.default_load_arrow_scale
+        self.ax.set_xlim(*self.default_xlim)
+        self.ax.set_ylim(*self.default_ylim)
+        self.redraw()
 
     # ---------- click logic ----------
     def click(self, e):
@@ -291,8 +331,16 @@ class Editor(QMainWindow):
         toolbar.addWidget(load)
         load.clicked.connect(self.load)
 
+        view_scale = QPushButton("View/Scale")
+        toolbar.addWidget(view_scale)
+        view_scale.clicked.connect(self.change_view_scale)
+
+        reset_view_scale = QPushButton("Reset view/scale")
+        toolbar.addWidget(reset_view_scale)
+
         self.canvas = TrussCanvas(self)
         left.addWidget(self.canvas)
+        reset_view_scale.clicked.connect(self.canvas.reset_view_scale)
 
         # result table
         self.table = QTableWidget()
@@ -342,6 +390,38 @@ class Editor(QMainWindow):
                 self.model.from_dict(json.load(fh))
             self.canvas.redraw()
 
+    def change_view_scale(self):
+        dlg = ViewScaleDialog(
+            self.canvas.ax.get_xlim(),
+            self.canvas.ax.get_ylim(),
+            self.canvas.load_arrow_scale,
+        )
+        if not dlg.exec_():
+            return
+
+        try:
+            xmin = float(dlg.xmin.text())
+            xmax = float(dlg.xmax.text())
+            ymin = float(dlg.ymin.text())
+            ymax = float(dlg.ymax.text())
+            load_scale = float(dlg.load_scale.text())
+        except ValueError:
+            QMessageBox.warning(self, "Invalid values", "Please enter numeric values.")
+            return
+
+        if xmin >= xmax or ymin >= ymax:
+            QMessageBox.warning(self, "Invalid range", "Min value must be lower than max value.")
+            return
+
+        if load_scale <= 0:
+            QMessageBox.warning(self, "Invalid scale", "Load arrow scale must be > 0.")
+            return
+
+        self.canvas.load_arrow_scale = load_scale
+        self.canvas.ax.set_xlim(xmin, xmax)
+        self.canvas.ax.set_ylim(ymin, ymax)
+        self.canvas.redraw()
+
     # ---------- SOLVER ----------
     def solve(self):
         m = self.model
@@ -388,4 +468,3 @@ if __name__ == "__main__":
     w = Editor()
     w.show()
     sys.exit(app.exec_())
-
