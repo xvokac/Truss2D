@@ -4,7 +4,7 @@ GUI solver of 2D truss structure
 <p align="center">
   <img src="images/image01.png" width="30%">
   <img src="images/image02.png" width="30%">
-  <img src="images/image02.png" width="30%">
+  <img src="images/image03.png" width="30%">
 </p>
 
 ## Quick start
