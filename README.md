@@ -1,6 +1,10 @@
 # Truss2D
 GUI solver of 2D truss structure
-![input data](images/image01.png)
+
+<p align="center">
+  <img src="images/image01.png" width="45%">
+  <img src="images/image02.png" width="45%">
+</p>
 
 ## Quick start
 
