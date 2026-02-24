@@ -11,7 +11,7 @@ def load_model(filename):
 
 def plot_truss(filename, scale_load=0.2):
     model = load_model(filename)
-    u, R, N, members = solve_truss(filename)
+    u, R, N = solve_truss(filename)
 
     nodes = np.array(model["nodes"])
     members = model["members"]
@@ -96,4 +96,5 @@ def plot_truss(filename, scale_load=0.2):
 
 if __name__ == "__main__":
     plot_truss("model.json")
+
 
