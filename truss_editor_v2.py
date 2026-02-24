@@ -279,8 +279,8 @@ class Editor(QMainWindow):
 
     # ---------- IO ----------
     def save(self):
-        f,_ = QFileDialog.getSaveFileName(self,"Save","","JSON (*.json)")
-        if f:
+        path, _ = QFileDialog.getSaveFileName(self, "Save", "", "JSON (*.json)")
+        if path:
             data = {
                     "nodes": [[float(x), float(y)] for x, y in self.model.nodes],
 
