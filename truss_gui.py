@@ -136,6 +136,7 @@ class MainWindow(QMainWindow):
 
         # print results
         text = "MEMBER FORCES:\n\n"
+        members = self.model["members"]
         for i, f in enumerate(member_forces):
             state = "Tension" if f > 0 else "Compression"
             n1, n2 = members[i]
@@ -156,4 +157,5 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     sys.exit(app.exec_())
+
 
