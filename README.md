@@ -1,5 +1,5 @@
 # Truss2D
-GUI solver of 2D truss structure
+Solver of 2D truss structure
 
 <p align="center">
   <img src="images/image01.png" width="30%">
