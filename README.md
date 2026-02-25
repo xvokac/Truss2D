@@ -1,5 +1,5 @@
 # Truss2D
-Solver of 2D truss structure
+Solver of 2D truss structure. Each joint is assumed to be a perfect joint and the load acts only at a point in the joint.
 
 <p align="center">
   <img src="images/image01.png" width="30%">
@@ -16,4 +16,9 @@ git clone https://github.com/xvokac/Truss2D
 cd Truss2D
 pip install numpy matplotlib PyQt5
 python truss_gui.py
+```
+Then load the input JSON file, which can be prepared in a text editor or using a GUI tool:
+
+```bash
+python truss_editor_v2.py
 ```
