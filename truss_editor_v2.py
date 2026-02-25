@@ -248,30 +248,50 @@ class TrussCanvas(Canvas):
             if dlg.exec_():
                 m.nodes.append([float(dlg.x.text()), float(dlg.y.text())])
                 self.redraw()
+                ed.statusBar().showMessage(
+                    f"Node {len(m.nodes) - 1} added.",
+                    4000,
+                )
 
         elif ed.mode == "member":
             idx = ed.find_node(x, y)
             if idx is None:
+                ed.statusBar().showMessage(
+                    "Member mode: click an existing node.",
+                    4000,
+                )
                 return
             ed.sel.append(idx)
             if len(ed.sel) == 2:
                 m.members.append(ed.sel.copy())
                 ed.sel.clear()
                 self.redraw()
+                ed.statusBar().showMessage("Member added.", 4000)
+            else:
+                ed.statusBar().showMessage("First node selected. Click second node.")
 
         elif ed.mode == "support":
             idx = ed.find_node(x, y)
             if idx is None:
+                ed.statusBar().showMessage(
+                    "Support mode: click an existing node.",
+                    4000,
+                )
                 return
             dlg = SupportDialog()
             if dlg.exec_():
                 m.supports.append({"node": idx,
                                    "fix": [dlg.fx.isChecked(), dlg.fy.isChecked()]})
                 self.redraw()
+                ed.statusBar().showMessage(f"Support set at node {idx}.", 4000)
 
         elif ed.mode == "load":
             idx = ed.find_node(x, y)
             if idx is None:
+                ed.statusBar().showMessage(
+                    "Load mode: click an existing node.",
+                    4000,
+                )
                 return
             dlg = LoadDialog()
             if dlg.exec_():
@@ -279,6 +299,7 @@ class TrussCanvas(Canvas):
                                 "fx": float(dlg.fx.text()),
                                 "fy": float(dlg.fy.text())})
                 self.redraw()
+                ed.statusBar().showMessage(f"Load set at node {idx}.", 4000)
 
         elif ed.mode == "delete":
             # delete member first
@@ -287,6 +308,7 @@ class TrussCanvas(Canvas):
                 if np.linalg.norm(np.cross(p2-p1, p1-[x,y]))/np.linalg.norm(p2-p1) < 0.3:
                     m.members.pop(i)
                     self.redraw()
+                    ed.statusBar().showMessage(f"Member {i} deleted.", 4000)
                     return
 
             # delete node
@@ -323,6 +345,10 @@ class TrussCanvas(Canvas):
                 m.loads = updated_loads
 
                 self.redraw()
+                ed.statusBar().showMessage(f"Node {idx} deleted.", 4000)
+                return
+
+            ed.statusBar().showMessage("Delete mode: no nearby member or node.", 4000)
 
 
 # ================= MAIN =================
@@ -379,9 +405,22 @@ class Editor(QMainWindow):
         self.table = QTableWidget()
         layout.addWidget(self.table, 2)
 
+        self.statusBar().showMessage("Mode: Node. Click in canvas to add a node.")
+
     def set_mode(self, m):
         self.mode = m
         self.sel.clear()
+        self.set_status_for_mode()
+
+    def set_status_for_mode(self):
+        messages = {
+            "node": "Mode: Node. Click in canvas to add a node.",
+            "member": "Mode: Member. Click two existing nodes to create a member.",
+            "support": "Mode: Support. Click an existing node to define support.",
+            "load": "Mode: Load. Click an existing node to define load.",
+            "delete": "Mode: Delete. Click a member or node to remove it.",
+        }
+        self.statusBar().showMessage(messages.get(self.mode, "Ready."))
 
     def find_node(self, x, y):
         if not self.model.nodes:
@@ -413,6 +452,7 @@ class Editor(QMainWindow):
             
             with open(path, "w") as f:
                 json.dump(data, f, indent=2)
+            self.statusBar().showMessage(f"Saved model to: {path}", 6000)
 ##            with open(f,"w") as fh:
 ##                json.dump(self.model.to_dict(),fh,indent=2)
 
@@ -422,6 +462,7 @@ class Editor(QMainWindow):
             with open(f) as fh:
                 self.model.from_dict(json.load(fh))
             self.canvas.redraw()
+            self.statusBar().showMessage(f"Loaded model from: {f}", 6000)
 
     def change_view_scale(self):
         dlg = ViewScaleDialog(
@@ -454,11 +495,13 @@ class Editor(QMainWindow):
         self.canvas.ax.set_xlim(xmin, xmax)
         self.canvas.ax.set_ylim(ymin, ymax)
         self.canvas.redraw()
+        self.statusBar().showMessage("View/scale updated.", 4000)
 
     # ---------- SOLVER ----------
     def solve(self):
         m = self.model
         if not m.members:
+            self.statusBar().showMessage("Cannot solve: add at least one member first.", 5000)
             return
 
         n = len(m.nodes)
@@ -492,6 +535,8 @@ class Editor(QMainWindow):
         for i,f in enumerate(forces):
             self.table.setItem(i,0,QTableWidgetItem(str(i)))
             self.table.setItem(i,1,QTableWidgetItem(f"{f:.3f}"))
+
+        self.statusBar().showMessage("Solve finished. Results table updated.", 5000)
 
 
 # ================= RUN =================
