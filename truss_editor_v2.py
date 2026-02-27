@@ -263,6 +263,13 @@ class TrussCanvas(Canvas):
                 return
             ed.sel.append(idx)
             if len(ed.sel) == 2:
+                if ed.sel[0] == ed.sel[1]:
+                    ed.sel.clear()
+                    ed.statusBar().showMessage(
+                        "Member mode: first and second node must be different.",
+                        4000,
+                    )
+                    return
                 m.members.append(ed.sel.copy())
                 ed.sel.clear()
                 self.redraw()
