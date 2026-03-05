@@ -15,6 +15,87 @@ def load_model(filename):
         return json.load(f)
 
 
+def normalize_model(model):
+    """Return model with contiguous 0..N-1 node indices.
+
+    Supported input formats:
+    - nodes as [[x, y], ...] and indices already matching list positions
+    - nodes as [{"id": <node_id>, "x": <x>, "y": <y>}, ...] with arbitrary IDs
+    """
+    nodes_raw = model.get("nodes", [])
+    if not nodes_raw:
+        return {
+            "nodes": [],
+            "members": [],
+            "supports": [],
+            "loads": [],
+        }, {}
+
+    first_node = nodes_raw[0]
+    id_to_new = {}
+    nodes = []
+
+    if isinstance(first_node, dict):
+        for i, node in enumerate(nodes_raw):
+            if "id" not in node or "x" not in node or "y" not in node:
+                raise TrussError(
+                    f"Node at index {i} must contain keys: id, x, y."
+                )
+            original_id = int(node["id"])
+            if original_id in id_to_new:
+                raise TrussError(f"Duplicate node id {original_id}.")
+            id_to_new[original_id] = len(nodes)
+            nodes.append([float(node["x"]), float(node["y"])])
+    else:
+        nodes = [[float(x), float(y)] for x, y in nodes_raw]
+        id_to_new = {i: i for i in range(len(nodes))}
+
+    def remap_node(node_id):
+        key = int(node_id)
+        if key not in id_to_new:
+            raise TrussError(f"Unknown node id {node_id}.")
+        return id_to_new[key]
+
+    members = []
+    for i, (n1, n2) in enumerate(model.get("members", [])):
+        try:
+            members.append([remap_node(n1), remap_node(n2)])
+        except TrussError as e:
+            raise TrussError(f"Invalid member {i}: {e}") from e
+
+    supports = []
+    for i, sup in enumerate(model.get("supports", [])):
+        try:
+            supports.append({
+                "node": remap_node(sup["node"]),
+                "fix": [bool(sup["fix"][0]), bool(sup["fix"][1])],
+            })
+        except (KeyError, IndexError, TypeError) as e:
+            raise TrussError(f"Invalid support {i} format.") from e
+        except TrussError as e:
+            raise TrussError(f"Invalid support {i}: {e}") from e
+
+    loads = []
+    for i, load in enumerate(model.get("loads", [])):
+        try:
+            loads.append({
+                "node": remap_node(load["node"]),
+                "fx": float(load.get("fx", 0.0)),
+                "fy": float(load.get("fy", 0.0)),
+            })
+        except (KeyError, TypeError, ValueError) as e:
+            raise TrussError(f"Invalid load {i} format.") from e
+        except TrussError as e:
+            raise TrussError(f"Invalid load {i}: {e}") from e
+
+    return {
+        "nodes": nodes,
+        "members": members,
+        "supports": supports,
+        "loads": loads,
+    }, id_to_new
+
+
 def check_model(model):
     nodes = model["nodes"]
     members = model["members"]
@@ -137,8 +218,13 @@ def compute_member_forces(nodes, members, u):
     return np.array(forces)
 
 
-def solve_truss(filename):
-    model = load_model(filename)
+def solve_truss(filename_or_model):
+    if isinstance(filename_or_model, str):
+        model = load_model(filename_or_model)
+    else:
+        model = filename_or_model
+
+    model, _ = normalize_model(model)
     check_model(model)
 
     nodes = model["nodes"]
