@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
 
-from truss_solver import solve_truss
+from truss_solver import solve_truss, normalize_model
 
 
 class TrussCanvas(Canvas):
@@ -124,9 +124,11 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(central)
 
         self.load_btn = QPushButton("Load JSON")
+        self.save_norm_btn = QPushButton("Save normalized JSON")
         self.solve_btn = QPushButton("Solve")
 
         layout.addWidget(self.load_btn)
+        layout.addWidget(self.save_norm_btn)
         layout.addWidget(self.solve_btn)
 
         controls = QHBoxLayout()
@@ -161,6 +163,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.results)
 
         self.load_btn.clicked.connect(self.load_file)
+        self.save_norm_btn.clicked.connect(self.save_normalized_file)
         self.solve_btn.clicked.connect(self.solve)
         self.fx_scale.valueChanged.connect(self.update_plot)
         self.fy_scale.valueChanged.connect(self.update_plot)
@@ -173,10 +176,29 @@ class MainWindow(QMainWindow):
 
         if fname:
             with open(fname) as f:
-                self.model = json.load(f)
+                raw_model = json.load(f)
+
+            self.model, _ = normalize_model(raw_model)
 
             self.filename = fname
-            self.results.setText("Model loaded.")
+            self.member_forces = None
+            self.results.setText("Model loaded and normalized for solver/canvas.")
+
+    def save_normalized_file(self):
+        if not self.model:
+            QMessageBox.warning(self, "Error", "Load a model first.")
+            return
+
+        fname, _ = QFileDialog.getSaveFileName(
+            self, "Save normalized JSON", "", "JSON Files (*.json)"
+        )
+        if not fname:
+            return
+
+        with open(fname, "w") as f:
+            json.dump(self.model, f, indent=2)
+
+        self.results.append(f"\nNormalized model saved to: {fname}")
 
     def solve(self):
         if not self.model:
@@ -184,7 +206,7 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            u, reactions, member_forces = solve_truss(self.filename)
+            u, reactions, member_forces = solve_truss(self.model)
         except Exception as e:
             QMessageBox.critical(self, "Solver error", str(e))
             return

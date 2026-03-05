@@ -11,7 +11,12 @@ from PyQt5.QtWidgets import (
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
 from matplotlib.figure import Figure
 
-from truss_solver import assemble_global_stiffness, solve_displacements, compute_member_forces
+from truss_solver import (
+    assemble_global_stiffness,
+    solve_displacements,
+    compute_member_forces,
+    normalize_model,
+)
 
 
 # ================= MODEL =================
@@ -467,9 +472,15 @@ class Editor(QMainWindow):
         f,_ = QFileDialog.getOpenFileName(self,"Load","","JSON (*.json)")
         if f:
             with open(f) as fh:
-                self.model.from_dict(json.load(fh))
+                raw_model = json.load(fh)
+
+            normalized_model, _ = normalize_model(raw_model)
+            self.model.from_dict(normalized_model)
             self.canvas.redraw()
-            self.statusBar().showMessage(f"Loaded model from: {f}", 6000)
+            self.statusBar().showMessage(
+                f"Loaded normalized model from: {f}",
+                6000,
+            )
 
     def change_view_scale(self):
         dlg = ViewScaleDialog(
