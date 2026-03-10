@@ -124,11 +124,11 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(central)
 
         self.load_btn = QPushButton("Load JSON")
-        self.save_norm_btn = QPushButton("Save normalized JSON")
+        # self.save_norm_btn = QPushButton("Save normalized JSON")
         self.solve_btn = QPushButton("Solve")
 
         layout.addWidget(self.load_btn)
-        layout.addWidget(self.save_norm_btn)
+        # layout.addWidget(self.save_norm_btn)
         layout.addWidget(self.solve_btn)
 
         controls = QHBoxLayout()
@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.results)
 
         self.load_btn.clicked.connect(self.load_file)
-        self.save_norm_btn.clicked.connect(self.save_normalized_file)
+        # self.save_norm_btn.clicked.connect(self.save_normalized_file)
         self.solve_btn.clicked.connect(self.solve)
         self.fx_scale.valueChanged.connect(self.update_plot)
         self.fy_scale.valueChanged.connect(self.update_plot)
@@ -249,5 +249,6 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     sys.exit(app.exec_())
+
 
 
